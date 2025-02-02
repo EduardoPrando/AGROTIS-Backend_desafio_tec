@@ -2,6 +2,7 @@ package com.agrotis.backendtest.controller;
 
 import com.agrotis.backendtest.handlers.CustomSuccessResponse;
 import com.agrotis.backendtest.model.Pessoa;
+import com.agrotis.backendtest.request.PessoaRequest;
 import com.agrotis.backendtest.service.PessoaService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -18,7 +19,7 @@ public class PessoaController {
     }
 
     @PostMapping
-    public ResponseEntity<?> criar(@RequestBody @Validated Pessoa pessoa) {
+    public ResponseEntity<?> criar(@RequestBody @Validated PessoaRequest pessoa) {
         return CustomSuccessResponse.created(service.salvar(pessoa),"Cadastro realizado com sucesso!");
     }
 

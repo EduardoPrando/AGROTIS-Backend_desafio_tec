@@ -14,6 +14,11 @@ public class Propriedade {
 
     public Propriedade() {}
 
+    public Propriedade(String nome, String cnpj) {
+        this.nome = nome;
+        this.cnpj = cnpj;
+    }
+
     public Long getId() {
         return id;
     }

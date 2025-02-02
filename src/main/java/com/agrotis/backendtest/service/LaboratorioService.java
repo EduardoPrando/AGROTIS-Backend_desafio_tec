@@ -1,8 +1,10 @@
 package com.agrotis.backendtest.service;
 
+import com.agrotis.backendtest.adapter.Adapter;
 import com.agrotis.backendtest.handlers.ResourceNotFoundException;
 import com.agrotis.backendtest.model.Laboratorio;
 import com.agrotis.backendtest.repository.LaboratorioRepository;
+import com.agrotis.backendtest.request.LaboratorioRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -10,13 +12,16 @@ import java.util.List;
 @Service
 public class LaboratorioService {
 
+    public Adapter<Laboratorio, LaboratorioRequest> adapter;
     private final LaboratorioRepository repository;
 
-    public LaboratorioService(LaboratorioRepository repository) {
+    public LaboratorioService(LaboratorioRepository repository, Adapter<Laboratorio, LaboratorioRequest> adapter) {
         this.repository = repository;
+        this.adapter = adapter;
     }
 
-    public Laboratorio salvar(Laboratorio laboratorio) {
+    public Laboratorio salvar(LaboratorioRequest laboratorioRequest) {
+        Laboratorio laboratorio = adapter.toEntity(laboratorioRequest);
         return repository.save(laboratorio);
     }
 

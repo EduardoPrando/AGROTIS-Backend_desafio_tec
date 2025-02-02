@@ -2,6 +2,7 @@ package com.agrotis.backendtest.controller;
 
 import com.agrotis.backendtest.handlers.CustomSuccessResponse;
 import com.agrotis.backendtest.model.Propriedade;
+import com.agrotis.backendtest.request.PropriedadeRequest;
 import com.agrotis.backendtest.service.PropriedadeService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -17,7 +18,7 @@ public class PropriedadeController {
     }
 
     @PostMapping
-    public ResponseEntity<?> criar(@RequestBody @Validated Propriedade propriedade) {
+    public ResponseEntity<?> criar(@RequestBody @Validated PropriedadeRequest propriedade) {
         return CustomSuccessResponse.created(service.salvar(propriedade), "Cadastro realizado com sucesso!");
     }
 

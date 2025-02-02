@@ -53,7 +53,7 @@ public class RelatorioServiceTest {
     }
 
     @Test
-    @DisplayName("Deve retornar resultados válidos quando os filtros estão corretos")
+    @DisplayName("buscar: Deve retornar resultados válidos quando os filtros estão corretos")
     void testBuscarRelatorioLaboratorios_ValidFilters() {
         LaboratorioResumoDTO resumo = new LaboratorioResumoDTO(1L, "LAB 1", 2L);
         when(repository.buscarLaboratorios(any(FiltroLaboratorios.class)))
@@ -70,7 +70,7 @@ public class RelatorioServiceTest {
     }
 
     @Test
-    @DisplayName("Deve lançar exceção quando quantidadeMinima é inválida")
+    @DisplayName("buscar: Deve lançar exceção quando quantidadeMinima é inválida")
     void testBuscarRelatorioLaboratorios_InvalidQuantidadeMinima() {
         FiltroLaboratorios filtro = new FiltroLaboratorios();
         filtro.setQuantidadeMinima(0L);
@@ -82,7 +82,7 @@ public class RelatorioServiceTest {
     }
 
     @Test
-    @DisplayName("Deve lançar exceção quando dataInicialInicio não for anterior a dataInicialFim")
+    @DisplayName("buscar: Deve lançar exceção quando dataInicialInicio não for anterior a dataInicialFim")
     void testBuscarRelatorioLaboratorios_InvalidDataInicialRange() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
                 service.buscarRelatorioLaboratorios(filtroDataInicialInvalida)
@@ -92,7 +92,7 @@ public class RelatorioServiceTest {
     }
 
     @Test
-    @DisplayName("Deve lançar exceção quando dataFinalInicio não for anterior a dataFinalFim")
+    @DisplayName("buscar: Deve lançar exceção quando dataFinalInicio não for anterior a dataFinalFim")
     void testBuscarRelatorioLaboratorios_InvalidDataFinalRange() {
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
             service.buscarRelatorioLaboratorios(filtroDataFinalInvalida)

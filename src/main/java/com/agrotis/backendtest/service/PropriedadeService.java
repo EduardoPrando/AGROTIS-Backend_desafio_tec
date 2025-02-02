@@ -1,21 +1,27 @@
 package com.agrotis.backendtest.service;
 
+import com.agrotis.backendtest.adapter.Adapter;
 import com.agrotis.backendtest.handlers.ResourceNotFoundException;
 import com.agrotis.backendtest.model.Propriedade;
 import com.agrotis.backendtest.repository.PropriedadeRepository;
+import com.agrotis.backendtest.request.PropriedadeRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
 public class PropriedadeService {
+
+    Adapter<Propriedade, PropriedadeRequest> adapter;
     private final PropriedadeRepository repository;
 
-    public PropriedadeService(PropriedadeRepository repository) {
+    public PropriedadeService(PropriedadeRepository repository, Adapter<Propriedade, PropriedadeRequest> adapter) {
         this.repository = repository;
+        this.adapter = adapter;
     }
 
-    public Propriedade salvar(Propriedade propriedade) {
+    public Propriedade salvar(PropriedadeRequest propriedadeRequest) {
+        Propriedade propriedade = adapter.toEntity(propriedadeRequest);
         return repository.save(propriedade);
     }
 

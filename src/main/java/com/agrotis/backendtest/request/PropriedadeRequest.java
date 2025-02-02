@@ -1,16 +1,15 @@
 package com.agrotis.backendtest.request;
 
-import com.agrotis.backendtest.adapter.Adapter;
-import org.springframework.stereotype.Component;
-
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.validation.constraints.NotBlank;
 
-public class LaboratorioRequest {
+public class PropriedadeRequest {
     private String nome;
-    public LaboratorioRequest() {}
+    private String cnpj;
+
 
     public String getNome() {
         return nome;
@@ -18,5 +17,13 @@ public class LaboratorioRequest {
 
     public void setNome(String nome) {
         this.nome = nome;
+    }
+
+    public String getCnpj() {
+        return cnpj;
+    }
+
+    public void setCnpj(String cnpj) {
+        this.cnpj = cnpj;
     }
 }

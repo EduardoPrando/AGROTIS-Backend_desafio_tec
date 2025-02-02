@@ -7,6 +7,8 @@ import com.agrotis.backendtest.model.Propriedade;
 import com.agrotis.backendtest.repository.LaboratorioRepository;
 import com.agrotis.backendtest.repository.PessoaRepository;
 import com.agrotis.backendtest.repository.PropriedadeRepository;
+import com.agrotis.backendtest.request.PessoaRequest;
+import com.agrotis.backendtest.adapter.Adapter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -36,9 +38,13 @@ public class PessoaServiceTest {
     @Mock
     private PropriedadeRepository propriedadeRepository;
 
+    @Mock
+    private Adapter<Pessoa, PessoaRequest> adapter;
+
     @InjectMocks
     private PessoaService pessoaService;
 
+    private PessoaRequest pessoaRequest;
     private Pessoa pessoa;
     private Propriedade propriedade;
     private Laboratorio laboratorio;
@@ -48,7 +54,7 @@ public class PessoaServiceTest {
         propriedade = new Propriedade();
         propriedade.setId(1L);
         propriedade.setNome("Agrotis 1");
-        propriedade.setCnpj("04.909.987.0001-89");
+        propriedade.setCnpj("04909987000189");
 
         laboratorio = new Laboratorio();
         laboratorio.setId(1L);
@@ -62,30 +68,43 @@ public class PessoaServiceTest {
         pessoa.setObservacoes("Observação de teste");
         pessoa.setPropriedade(propriedade);
         pessoa.setLaboratorio(laboratorio);
+
+        pessoaRequest = new PessoaRequest();
+        pessoaRequest.setNome("Operario 1");
+        pessoaRequest.setDataInicial(LocalDateTime.now());
+        pessoaRequest.setDataFinal(LocalDateTime.now().plusDays(5));
+        pessoaRequest.setObservacoes("Observação de teste");
+        pessoaRequest.setPropriedade(propriedade);
+        pessoaRequest.setLaboratorio(laboratorio);
     }
 
     @Test
-    @DisplayName("Deve salvar uma Pessoa com sucesso")
-    void testSalvarPessoaSuccess() {
+    @DisplayName("salvar: Deve converter o request em entidade e salvar a Pessoa com sucesso")
+    void testSalvarPessoa_Success() {
+        when(adapter.toEntity(pessoaRequest)).thenReturn(pessoa);
         when(propriedadeRepository.findById(propriedade.getId())).thenReturn(Optional.of(propriedade));
         when(laboratorioRepository.findById(laboratorio.getId())).thenReturn(Optional.of(laboratorio));
         when(pessoaRepository.save(any(Pessoa.class))).thenReturn(pessoa);
 
-        Pessoa result = pessoaService.salvar(pessoa);
+        Pessoa resultado = pessoaService.salvar(pessoaRequest);
 
-        assertNotNull(result, "A pessoa salva não deve ser nula");
-        assertEquals("Operario 1", result.getNome(), "O nome da pessoa deve ser 'Operario 1'");
+        assertNotNull(resultado, "A Pessoa salva não deve ser nula");
+        assertEquals("Operario 1", resultado.getNome(), "O nome deve ser 'Operario 1'");
+        verify(adapter, times(1)).toEntity(pessoaRequest);
         verify(propriedadeRepository, times(1)).findById(propriedade.getId());
         verify(laboratorioRepository, times(1)).findById(laboratorio.getId());
         verify(pessoaRepository, times(1)).save(pessoa);
     }
 
     @Test
-    @DisplayName("Deve lançar ResourceNotFoundException ao salvar se Propriedade não for encontrada")
-    void testSalvarPessoaPropriedadeNotFound() {
+    @DisplayName("salvar: Deve lançar ResourceNotFoundException se a Propriedade não for encontrada")
+    void testSalvarPessoa_PropriedadeNotFound() {
+        when(adapter.toEntity(pessoaRequest)).thenReturn(pessoa);
         when(propriedadeRepository.findById(propriedade.getId())).thenReturn(Optional.empty());
 
-        ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class, () -> pessoaService.salvar(pessoa));
+        ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class, () -> {
+            pessoaService.salvar(pessoaRequest);
+        });
         assertEquals("Propriedade com ID " + propriedade.getId() + " não encontrada", ex.getMessage());
         verify(propriedadeRepository, times(1)).findById(propriedade.getId());
         verify(laboratorioRepository, never()).findById(anyLong());
@@ -93,12 +112,15 @@ public class PessoaServiceTest {
     }
 
     @Test
-    @DisplayName("Deve lançar ResourceNotFoundException ao salvar se Laboratorio não for encontrado")
-    void testSalvarPessoaLaboratorioNotFound() {
+    @DisplayName("salvar: Deve lançar ResourceNotFoundException se o Laboratorio não for encontrado")
+    void testSalvarPessoa_LaboratorioNotFound() {
+        when(adapter.toEntity(pessoaRequest)).thenReturn(pessoa);
         when(propriedadeRepository.findById(propriedade.getId())).thenReturn(Optional.of(propriedade));
         when(laboratorioRepository.findById(laboratorio.getId())).thenReturn(Optional.empty());
 
-        ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class, () -> pessoaService.salvar(pessoa));
+        ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class, () -> {
+            pessoaService.salvar(pessoaRequest);
+        });
         assertEquals("Laboratorio com ID " + laboratorio.getId() + " não encontrado", ex.getMessage());
         verify(propriedadeRepository, times(1)).findById(propriedade.getId());
         verify(laboratorioRepository, times(1)).findById(laboratorio.getId());
@@ -106,79 +128,80 @@ public class PessoaServiceTest {
     }
 
     @Test
-    @DisplayName("Deve editar uma Pessoa atualizando os dados recebidos")
-    void testEditarPessoa_Success() {
+    @DisplayName("editar: Deve editar uma Pessoa definindo o ID e salvando os dados")
+    void testEditarPessoa() {
         when(pessoaRepository.findById(1L)).thenReturn(Optional.of(pessoa));
         when(pessoaRepository.save(any(Pessoa.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Pessoa novaPessoa = new Pessoa();
-        novaPessoa.setNome("Operario Atualizado");
-        novaPessoa.setDataInicial(pessoa.getDataInicial().plusHours(1));
-        novaPessoa.setDataFinal(pessoa.getDataFinal().plusHours(1));
-        novaPessoa.setObservacoes("Observação atualizada");
-        novaPessoa.setPropriedade(propriedade);
-        novaPessoa.setLaboratorio(laboratorio);
+        Pessoa pessoaAtualizada = new Pessoa();
+        pessoaAtualizada.setNome("Operario Atualizado");
+        pessoaAtualizada.setDataInicial(pessoa.getDataInicial().plusHours(1));
+        pessoaAtualizada.setDataFinal(pessoa.getDataFinal().plusHours(1));
+        pessoaAtualizada.setObservacoes("Observação atualizada");
+        pessoaAtualizada.setPropriedade(propriedade);
+        pessoaAtualizada.setLaboratorio(laboratorio);
 
-        Pessoa resultado = pessoaService.editar(1L, novaPessoa);
-        assertNotNull(resultado, "A pessoa editada não deve ser nula");
-        assertEquals(1L, resultado.getId(), "O id da pessoa deve ser 1");
-        assertEquals("Operario Atualizado", resultado.getNome(), "O nome deve ser atualizado para 'Operario Atualizado'");
+        Pessoa resultado = pessoaService.editar(1L, pessoaAtualizada);
+        assertNotNull(resultado, "A Pessoa editada não deve ser nula");
+        assertEquals(1L, resultado.getId(), "O ID deve ser 1");
+        assertEquals("Operario Atualizado", resultado.getNome(), "O nome deve ser atualizado");
         assertEquals("Observação atualizada", resultado.getObservacoes(), "As observações devem ser atualizadas");
         verify(pessoaRepository, times(1)).findById(1L);
-        verify(pessoaRepository, times(1)).save(novaPessoa);
+        verify(pessoaRepository, times(1)).save(pessoaAtualizada);
     }
 
     @Test
-    @DisplayName("Deve listar todas as Pessoas")
+    @DisplayName("listar: Deve retornar a lista de Pessoas")
     void testListarPessoas() {
         Pessoa p1 = pessoa;
         Pessoa p2 = new Pessoa();
         p2.setId(2L);
         p2.setNome("Operario 2");
-        p2.setDataInicial(pessoa.getDataInicial());
-        p2.setDataFinal(pessoa.getDataFinal());
+        p2.setDataInicial(LocalDateTime.now());
+        p2.setDataFinal(LocalDateTime.now().plusDays(3));
         p2.setObservacoes("Outra observação");
         p2.setPropriedade(propriedade);
         p2.setLaboratorio(laboratorio);
 
-        List<Pessoa> pessoas = Arrays.asList(p1, p2);
-        when(pessoaRepository.findAll()).thenReturn(pessoas);
+        List<Pessoa> lista = Arrays.asList(p1, p2);
+        when(pessoaRepository.findAll()).thenReturn(lista);
 
-        List<Pessoa> resultados = pessoaService.listar();
-        assertNotNull(resultados, "A lista de pessoas não deve ser nula");
-        assertEquals(2, resultados.size(), "Deve retornar 2 pessoas");
+        List<Pessoa> resultado = pessoaService.listar();
+        assertNotNull(resultado, "A lista de pessoas não deve ser nula");
+        assertEquals(2, resultado.size(), "Deve retornar 2 pessoas");
         verify(pessoaRepository, times(1)).findAll();
     }
 
     @Test
-    @DisplayName("Deve buscar Pessoa por ID com sucesso")
+    @DisplayName("buscarPorId: Deve retornar Pessoa por ID com sucesso")
     void testBuscarPessoaPorId_Success() {
         when(pessoaRepository.findById(1L)).thenReturn(Optional.of(pessoa));
 
-        Pessoa encontrada = pessoaService.buscarPorId(1L);
-        assertNotNull(encontrada, "A pessoa encontrada não deve ser nula");
-        assertEquals("Operario 1", encontrada.getNome(), "O nome da pessoa deve ser 'Operario 1'");
+        Pessoa resultado = pessoaService.buscarPorId(1L);
+        assertNotNull(resultado, "A Pessoa encontrada não deve ser nula");
+        assertEquals("Operario 1", resultado.getNome(), "O nome deve ser 'Operario 1'");
         verify(pessoaRepository, times(1)).findById(1L);
     }
 
     @Test
-    @DisplayName("Deve lançar ResourceNotFoundException ao buscar Pessoa inexistente")
+    @DisplayName("buscarPorId: Deve lançar ResourceNotFoundException quando Pessoa não for encontrada")
     void testBuscarPessoaPorId_NotFound() {
         when(pessoaRepository.findById(999L)).thenReturn(Optional.empty());
 
-        ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class, () -> pessoaService.buscarPorId(999L));
+        ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class, () -> {
+            pessoaService.buscarPorId(999L);
+        });
         assertEquals("Pessoa não encontrada!", ex.getMessage(), "A mensagem de erro deve ser 'Pessoa não encontrada!'");
         verify(pessoaRepository, times(1)).findById(999L);
     }
 
     @Test
-    @DisplayName("Deve deletar Pessoa com sucesso")
+    @DisplayName("deletar: Deve deletar Pessoa com sucesso")
     void testDeletarPessoa() {
         when(pessoaRepository.findById(1L)).thenReturn(Optional.of(pessoa));
         doNothing().when(pessoaRepository).deleteById(1L);
 
         pessoaService.deletar(1L);
-
         verify(pessoaRepository, times(1)).findById(1L);
         verify(pessoaRepository, times(1)).deleteById(1L);
     }

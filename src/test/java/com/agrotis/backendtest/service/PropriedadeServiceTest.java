@@ -3,6 +3,8 @@ package com.agrotis.backendtest.service;
 import com.agrotis.backendtest.handlers.ResourceNotFoundException;
 import com.agrotis.backendtest.model.Propriedade;
 import com.agrotis.backendtest.repository.PropriedadeRepository;
+import com.agrotis.backendtest.request.PropriedadeRequest;
+import com.agrotis.backendtest.adapter.Adapter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,54 +25,65 @@ import static org.mockito.Mockito.*;
 public class PropriedadeServiceTest {
 
     @Mock
-    private PropriedadeRepository propriedadeRepository;
+    private PropriedadeRepository repository;
+
+    @Mock
+    private Adapter<Propriedade, PropriedadeRequest> adapter;
 
     @InjectMocks
-    private PropriedadeService propriedadeService;
+    private PropriedadeService service;
 
+    private PropriedadeRequest propriedadeRequest;
     private Propriedade propriedade;
 
     @BeforeEach
     void setUp() {
+        propriedadeRequest = new PropriedadeRequest();
+        propriedadeRequest.setNome("Agrotis 1");
+        propriedadeRequest.setCnpj("04909987000189");
+
         propriedade = new Propriedade();
         propriedade.setId(1L);
         propriedade.setNome("Agrotis 1");
-        propriedade.setCnpj("04.909.987.0001-89");
+        propriedade.setCnpj("04909987000189");
     }
 
     @Test
-    @DisplayName("Deve salvar uma propriedade com sucesso")
-    void testSalvarPropriedade() {
-        when(propriedadeRepository.save(any(Propriedade.class))).thenReturn(propriedade);
+    @DisplayName("salvar: Deve converter o request em entidade e salvar a Propriedade com sucesso")
+    void testSalvarPropriedade_Success() {
+        when(adapter.toEntity(propriedadeRequest)).thenReturn(propriedade);
+        when(repository.save(any(Propriedade.class))).thenReturn(propriedade);
 
-        Propriedade resultado = propriedadeService.salvar(propriedade);
+        Propriedade resultado = service.salvar(propriedadeRequest);
+
         assertNotNull(resultado, "A propriedade salva não deve ser nula");
-        assertEquals("Agrotis 1", resultado.getNome(), "O nome da propriedade deve ser 'Agrotis 1'");
-        verify(propriedadeRepository, times(1)).save(propriedade);
+        assertEquals("Agrotis 1", resultado.getNome(), "O nome deve ser 'Agrotis 1'");
+        verify(adapter, times(1)).toEntity(propriedadeRequest);
+        verify(repository, times(1)).save(propriedade);
     }
 
     @Test
-    @DisplayName("Deve editar uma propriedade atualizando os dados recebidos")
+    @DisplayName("editar: Deve editar uma Propriedade definindo o ID e atualizando os dados")
     void testEditarPropriedade() {
-        when(propriedadeRepository.findById(1L)).thenReturn(Optional.of(propriedade));
-        when(propriedadeRepository.save(any(Propriedade.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(repository.findById(1L)).thenReturn(Optional.of(propriedade));
+        when(repository.save(any(Propriedade.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Propriedade novaPropriedade = new Propriedade();
-        novaPropriedade.setNome("Agrotis Atualizado");
-        novaPropriedade.setCnpj("12.345.678.9012-34");
+        Propriedade propriedadeAtualizada = new Propriedade();
+        propriedadeAtualizada.setNome("Agrotis Atualizado");
+        propriedadeAtualizada.setCnpj("12345678901234");
 
-        Propriedade resultado = propriedadeService.editar(1L, novaPropriedade);
+        Propriedade resultado = service.editar(1L, propriedadeAtualizada);
 
         assertNotNull(resultado, "A propriedade editada não deve ser nula");
-        assertEquals(1L, resultado.getId(), "O id da propriedade deve ser 1");
+        assertEquals(1L, resultado.getId(), "O ID deve ser 1");
         assertEquals("Agrotis Atualizado", resultado.getNome(), "O nome deve ser atualizado para 'Agrotis Atualizado'");
-        assertEquals("12.345.678.9012-34", resultado.getCnpj(), "O CNPJ deve ser atualizado para o novo valor");
-        verify(propriedadeRepository, times(1)).findById(1L);
-        verify(propriedadeRepository, times(1)).save(novaPropriedade);
+        assertEquals("12345678901234", resultado.getCnpj(), "O CNPJ deve ser atualizado para o novo valor");
+        verify(repository, times(1)).findById(1L);
+        verify(repository, times(1)).save(propriedadeAtualizada);
     }
 
     @Test
-    @DisplayName("Deve listar todas as propriedades")
+    @DisplayName("listar: Deve retornar a lista de Propriedades")
     void testListarPropriedades() {
         Propriedade propriedade2 = new Propriedade();
         propriedade2.setId(2L);
@@ -78,42 +91,45 @@ public class PropriedadeServiceTest {
         propriedade2.setCnpj("04909987000188");
 
         List<Propriedade> lista = Arrays.asList(propriedade, propriedade2);
-        when(propriedadeRepository.findAll()).thenReturn(lista);
+        when(repository.findAll()).thenReturn(lista);
 
-        List<Propriedade> resultado = propriedadeService.listar();
+        List<Propriedade> resultado = service.listar();
         assertNotNull(resultado, "A lista de propriedades não deve ser nula");
         assertEquals(2, resultado.size(), "A lista deve conter 2 propriedades");
-        verify(propriedadeRepository, times(1)).findAll();
+        verify(repository, times(1)).findAll();
     }
 
     @Test
-    @DisplayName("Deve buscar propriedade por ID com sucesso")
+    @DisplayName("buscarPorId: Deve retornar a Propriedade quando encontrada")
     void testBuscarPropriedadePorId_Success() {
-        when(propriedadeRepository.findById(1L)).thenReturn(Optional.of(propriedade));
-        Propriedade resultado = propriedadeService.buscarPorId(1L);
+        when(repository.findById(1L)).thenReturn(Optional.of(propriedade));
+
+        Propriedade resultado = service.buscarPorId(1L);
         assertNotNull(resultado, "A propriedade encontrada não deve ser nula");
-        assertEquals("Agrotis 1", resultado.getNome(), "O nome da propriedade deve ser 'Agrotis 1'");
-        verify(propriedadeRepository, times(1)).findById(1L);
+        assertEquals("Agrotis 1", resultado.getNome(), "O nome deve ser 'Agrotis 1'");
+        verify(repository, times(1)).findById(1L);
     }
 
     @Test
-    @DisplayName("Deve lançar ResourceNotFoundException ao buscar propriedade inexistente")
+    @DisplayName("buscarPorId: Deve lançar ResourceNotFoundException quando a Propriedade não for encontrada")
     void testBuscarPropriedadePorId_NotFound() {
-        when(propriedadeRepository.findById(999L)).thenReturn(Optional.empty());
+        when(repository.findById(999L)).thenReturn(Optional.empty());
 
-        ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class, () -> propriedadeService.buscarPorId(999L));
+        ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class, () -> {
+            service.buscarPorId(999L);
+        });
         assertEquals("Propriedade não encontrada!", ex.getMessage(), "A mensagem de erro deve ser 'Propriedade não encontrada!'");
-        verify(propriedadeRepository, times(1)).findById(999L);
+        verify(repository, times(1)).findById(999L);
     }
 
     @Test
-    @DisplayName("Deve deletar uma propriedade com sucesso")
+    @DisplayName("deletar: Deve deletar a Propriedade quando encontrada")
     void testDeletarPropriedade() {
-        when(propriedadeRepository.findById(1L)).thenReturn(Optional.of(propriedade));
-        doNothing().when(propriedadeRepository).deleteById(1L);
+        when(repository.findById(1L)).thenReturn(Optional.of(propriedade));
+        doNothing().when(repository).deleteById(1L);
 
-        propriedadeService.deletar(1L);
-        verify(propriedadeRepository, times(1)).findById(1L);
-        verify(propriedadeRepository, times(1)).deleteById(1L);
+        service.deletar(1L);
+        verify(repository, times(1)).findById(1L);
+        verify(repository, times(1)).deleteById(1L);
     }
 }
