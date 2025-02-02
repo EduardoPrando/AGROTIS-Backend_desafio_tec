@@ -2,7 +2,7 @@
 
 #### O teste consiste em construir uma API para ser utilizada na construção de uma tela;
 
-<img src="" width="auto">
+<img src="https://github.com/EduardoPrando/AGROTIS-Backend_desafio_tec/blob/main/external/teste.png" width="auto">
 
 A API deve realizar as validações necessárias para garantir a integridade dos
 dados e expor os serviços necessários para a listagem, busca, inserção,
