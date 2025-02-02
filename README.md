@@ -4,6 +4,8 @@
 
 <img src="https://github.com/EduardoPrando/AGROTIS-Backend_desafio_tec/blob/main/external/teste.png" width="auto">
 
+[Postman Collection](https://github.com/EduardoPrando/AGROTIS-Backend_desafio_tec/blob/main/external/Agrotis-Backend-test.postman_collection.json)
+
 A API deve realizar as validações necessárias para garantir a integridade dos
 dados e expor os serviços necessários para a listagem, busca, inserção,
 atualização e deleção dos dados (CRUD);
