@@ -11,6 +11,10 @@ public class Laboratorio {
 
     public Laboratorio() {}
 
+    public Laboratorio(String nome) {
+        this.nome = nome;
+    }
+
     public Long getId() {
         return id;
     }
