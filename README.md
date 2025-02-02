@@ -60,3 +60,16 @@ seguintes características:
 }
 ````
 
+### Rodando o projeto
+
+Ao baixar o repositorio entre na pasta principal e digite
+````
+mvn spring-boot:run
+````
+
+### Importanto a Collection
+Baixe a collection do postman neste link [Postman Collection](https://github.com/EduardoPrando/AGROTIS-Backend_desafio_tec/blob/main/external/Agrotis-Backend-test.postman_collection.json)
+
+com seu Postman aberto, clique em File import, arraste ou encontre o json q foi baixado e importe.
+
+
