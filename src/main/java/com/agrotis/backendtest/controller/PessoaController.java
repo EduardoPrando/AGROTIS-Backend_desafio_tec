@@ -34,7 +34,7 @@ public class PessoaController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> atualizar(@PathVariable Long id, @RequestBody Pessoa pessoa) {
+    public ResponseEntity<?> atualizar(@PathVariable Long id, @RequestBody PessoaRequest pessoa) {
         return CustomSuccessResponse.ok(service.editar(id, pessoa));
     }
 

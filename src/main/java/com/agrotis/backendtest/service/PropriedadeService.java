@@ -25,8 +25,9 @@ public class PropriedadeService {
         return repository.save(propriedade);
     }
 
-    public Propriedade editar(Long id, Propriedade propriedade) {
+    public Propriedade editar(Long id, PropriedadeRequest propriedadeRequest) {
         buscarPorId(id);
+        Propriedade propriedade = adapter.toEntity(propriedadeRequest);
         propriedade.setId(id);
         return repository.save(propriedade);
     }

@@ -82,8 +82,8 @@ public class PessoaServiceTest {
     @DisplayName("salvar: Deve converter o request em entidade e salvar a Pessoa com sucesso")
     void testSalvarPessoa_Success() {
         when(adapter.toEntity(pessoaRequest)).thenReturn(pessoa);
-        when(propriedadeRepository.findById(propriedade.getId())).thenReturn(Optional.of(propriedade));
-        when(laboratorioRepository.findById(laboratorio.getId())).thenReturn(Optional.of(laboratorio));
+        when(propriedadeRepository.findById(1L)).thenReturn(Optional.of(propriedade));
+        when(laboratorioRepository.findById(1L)).thenReturn(Optional.of(laboratorio));
         when(pessoaRepository.save(any(Pessoa.class))).thenReturn(pessoa);
 
         Pessoa resultado = pessoaService.salvar(pessoaRequest);
@@ -91,8 +91,8 @@ public class PessoaServiceTest {
         assertNotNull(resultado, "A Pessoa salva não deve ser nula");
         assertEquals("Operario 1", resultado.getNome(), "O nome deve ser 'Operario 1'");
         verify(adapter, times(1)).toEntity(pessoaRequest);
-        verify(propriedadeRepository, times(1)).findById(propriedade.getId());
-        verify(laboratorioRepository, times(1)).findById(laboratorio.getId());
+        verify(propriedadeRepository, times(1)).findById(1L);
+        verify(laboratorioRepository, times(1)).findById(1L);
         verify(pessoaRepository, times(1)).save(pessoa);
     }
 
@@ -100,13 +100,13 @@ public class PessoaServiceTest {
     @DisplayName("salvar: Deve lançar ResourceNotFoundException se a Propriedade não for encontrada")
     void testSalvarPessoa_PropriedadeNotFound() {
         when(adapter.toEntity(pessoaRequest)).thenReturn(pessoa);
-        when(propriedadeRepository.findById(propriedade.getId())).thenReturn(Optional.empty());
+        when(propriedadeRepository.findById(1L)).thenReturn(Optional.empty());
 
         ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class, () -> {
             pessoaService.salvar(pessoaRequest);
         });
-        assertEquals("Propriedade com ID " + propriedade.getId() + " não encontrada", ex.getMessage());
-        verify(propriedadeRepository, times(1)).findById(propriedade.getId());
+        assertEquals("Propriedade com ID 1 não encontrada", ex.getMessage());
+        verify(propriedadeRepository, times(1)).findById(1L);
         verify(laboratorioRepository, never()).findById(anyLong());
         verify(pessoaRepository, never()).save(any(Pessoa.class));
     }
@@ -115,38 +115,49 @@ public class PessoaServiceTest {
     @DisplayName("salvar: Deve lançar ResourceNotFoundException se o Laboratorio não for encontrado")
     void testSalvarPessoa_LaboratorioNotFound() {
         when(adapter.toEntity(pessoaRequest)).thenReturn(pessoa);
-        when(propriedadeRepository.findById(propriedade.getId())).thenReturn(Optional.of(propriedade));
-        when(laboratorioRepository.findById(laboratorio.getId())).thenReturn(Optional.empty());
+        when(propriedadeRepository.findById(1L)).thenReturn(Optional.of(propriedade));
+        when(laboratorioRepository.findById(1L)).thenReturn(Optional.empty());
 
         ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class, () -> {
             pessoaService.salvar(pessoaRequest);
         });
-        assertEquals("Laboratorio com ID " + laboratorio.getId() + " não encontrado", ex.getMessage());
-        verify(propriedadeRepository, times(1)).findById(propriedade.getId());
-        verify(laboratorioRepository, times(1)).findById(laboratorio.getId());
+        assertEquals("Laboratorio com ID 1 não encontrado", ex.getMessage());
+        verify(propriedadeRepository, times(1)).findById(1L);
+        verify(laboratorioRepository, times(1)).findById(1L);
         verify(pessoaRepository, never()).save(any(Pessoa.class));
     }
 
     @Test
-    @DisplayName("editar: Deve editar uma Pessoa definindo o ID e salvando os dados")
+    @DisplayName("editar: Deve editar uma Pessoa definindo o ID e salvando os dados atualizados")
     void testEditarPessoa() {
         when(pessoaRepository.findById(1L)).thenReturn(Optional.of(pessoa));
         when(pessoaRepository.save(any(Pessoa.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
+        PessoaRequest requestAtualizado = new PessoaRequest();
+        requestAtualizado.setNome("Operario Atualizado");
+        requestAtualizado.setDataInicial(pessoa.getDataInicial().plusHours(1));
+        requestAtualizado.setDataFinal(pessoa.getDataFinal().plusHours(1));
+        requestAtualizado.setObservacoes("Observação atualizada");
+        requestAtualizado.setPropriedade(propriedade);
+        requestAtualizado.setLaboratorio(laboratorio);
+
         Pessoa pessoaAtualizada = new Pessoa();
         pessoaAtualizada.setNome("Operario Atualizado");
-        pessoaAtualizada.setDataInicial(pessoa.getDataInicial().plusHours(1));
-        pessoaAtualizada.setDataFinal(pessoa.getDataFinal().plusHours(1));
+        pessoaAtualizada.setDataInicial(requestAtualizado.getDataInicial());
+        pessoaAtualizada.setDataFinal(requestAtualizado.getDataFinal());
         pessoaAtualizada.setObservacoes("Observação atualizada");
         pessoaAtualizada.setPropriedade(propriedade);
         pessoaAtualizada.setLaboratorio(laboratorio);
+        when(adapter.toEntity(requestAtualizado)).thenReturn(pessoaAtualizada);
 
-        Pessoa resultado = pessoaService.editar(1L, pessoaAtualizada);
+        Pessoa resultado = pessoaService.editar(1L, requestAtualizado);
+
         assertNotNull(resultado, "A Pessoa editada não deve ser nula");
         assertEquals(1L, resultado.getId(), "O ID deve ser 1");
-        assertEquals("Operario Atualizado", resultado.getNome(), "O nome deve ser atualizado");
+        assertEquals("Operario Atualizado", resultado.getNome(), "O nome deve ser atualizado para 'Operario Atualizado'");
         assertEquals("Observação atualizada", resultado.getObservacoes(), "As observações devem ser atualizadas");
         verify(pessoaRepository, times(1)).findById(1L);
+        verify(adapter, times(1)).toEntity(requestAtualizado);
         verify(pessoaRepository, times(1)).save(pessoaAtualizada);
     }
 

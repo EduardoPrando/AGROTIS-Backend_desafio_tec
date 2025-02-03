@@ -5,6 +5,7 @@ import com.agrotis.backendtest.model.Laboratorio;
 import com.agrotis.backendtest.request.LaboratorioRequest;
 import com.agrotis.backendtest.service.LaboratorioService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -19,7 +20,7 @@ public class LaboratorioController {
     }
 
     @PostMapping
-    public ResponseEntity<?> criar(@RequestBody LaboratorioRequest laboratorioRequest) {
+    public ResponseEntity<?> criar(@RequestBody @Validated LaboratorioRequest laboratorioRequest) {
         return CustomSuccessResponse.created(service.salvar(laboratorioRequest),"Cadastro realizado com sucesso!");
     }
 
@@ -34,7 +35,7 @@ public class LaboratorioController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> atualizar(@PathVariable Long id, @RequestBody Laboratorio laboratorio) {
+    public ResponseEntity<?> atualizar(@PathVariable Long id, @RequestBody LaboratorioRequest laboratorio) {
         return CustomSuccessResponse.ok(service.editar(id, laboratorio));
     }
 

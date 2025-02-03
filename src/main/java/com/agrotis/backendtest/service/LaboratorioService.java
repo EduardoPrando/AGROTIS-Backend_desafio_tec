@@ -25,8 +25,9 @@ public class LaboratorioService {
         return repository.save(laboratorio);
     }
 
-    public Laboratorio editar(Long id, Laboratorio laboratorio) {
+    public Laboratorio editar(Long id, LaboratorioRequest laboratorioRequest) {
         buscarPorId(id);
+        Laboratorio laboratorio = adapter.toEntity(laboratorioRequest);
         laboratorio.setId(id);
         return repository.save(laboratorio);
     }

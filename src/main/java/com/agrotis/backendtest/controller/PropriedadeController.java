@@ -33,7 +33,7 @@ public class PropriedadeController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<?> atualizar(@PathVariable Long id, @RequestBody Propriedade propriedade) {
+    public ResponseEntity<?> atualizar(@PathVariable Long id, @RequestBody PropriedadeRequest propriedade) {
         return CustomSuccessResponse.ok(service.editar(id, propriedade));
     }
 

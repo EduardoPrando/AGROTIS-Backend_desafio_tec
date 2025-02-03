@@ -65,14 +65,21 @@ public class LaboratorioServiceTest {
         when(repository.findById(1L)).thenReturn(Optional.of(laboratorio));
         when(repository.save(any(Laboratorio.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Laboratorio novoLab = new Laboratorio("Lab Atualizado");
-        Laboratorio resultado = service.editar(1L, novoLab);
+        LaboratorioRequest novoRequest = new LaboratorioRequest();
+        novoRequest.setNome("Lab Atualizado");
+
+        Laboratorio laboratorioAtualizado = new Laboratorio("Lab Atualizado");
+        laboratorioAtualizado.setId(1L);
+        when(adapter.toEntity(novoRequest)).thenReturn(laboratorioAtualizado);
+
+        Laboratorio resultado = service.editar(1L, novoRequest);
 
         assertNotNull(resultado, "O laboratório editado não deve ser nulo");
         assertEquals(1L, resultado.getId(), "O ID deve ser 1");
         assertEquals("Lab Atualizado", resultado.getNome(), "O nome deve ser atualizado para 'Lab Atualizado'");
         verify(repository, times(1)).findById(1L);
-        verify(repository, times(1)).save(novoLab);
+        verify(adapter, times(1)).toEntity(novoRequest);
+        verify(repository, times(1)).save(laboratorioAtualizado);
     }
 
     @Test

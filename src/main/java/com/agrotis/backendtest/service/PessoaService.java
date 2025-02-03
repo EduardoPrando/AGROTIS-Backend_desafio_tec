@@ -47,8 +47,9 @@ public class PessoaService {
         return repository.save(pessoa);
     }
 
-    public Pessoa editar(Long id, Pessoa pessoa) {
+    public Pessoa editar(Long id, PessoaRequest pessoaRequest) {
         buscarPorId(id);
+        Pessoa pessoa = adapter.toEntity(pessoaRequest);
         pessoa.setId(id);
         return repository.save(pessoa);
     }

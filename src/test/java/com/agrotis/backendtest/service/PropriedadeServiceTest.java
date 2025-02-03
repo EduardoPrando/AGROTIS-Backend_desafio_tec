@@ -68,17 +68,23 @@ public class PropriedadeServiceTest {
         when(repository.findById(1L)).thenReturn(Optional.of(propriedade));
         when(repository.save(any(Propriedade.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
+        PropriedadeRequest requestAtualizado = new PropriedadeRequest();
+        requestAtualizado.setNome("Agrotis Atualizado");
+        requestAtualizado.setCnpj("12345678901234");
+
         Propriedade propriedadeAtualizada = new Propriedade();
         propriedadeAtualizada.setNome("Agrotis Atualizado");
         propriedadeAtualizada.setCnpj("12345678901234");
+        when(adapter.toEntity(requestAtualizado)).thenReturn(propriedadeAtualizada);
 
-        Propriedade resultado = service.editar(1L, propriedadeAtualizada);
+        Propriedade resultado = service.editar(1L, requestAtualizado);
 
         assertNotNull(resultado, "A propriedade editada não deve ser nula");
         assertEquals(1L, resultado.getId(), "O ID deve ser 1");
         assertEquals("Agrotis Atualizado", resultado.getNome(), "O nome deve ser atualizado para 'Agrotis Atualizado'");
         assertEquals("12345678901234", resultado.getCnpj(), "O CNPJ deve ser atualizado para o novo valor");
         verify(repository, times(1)).findById(1L);
+        verify(adapter, times(1)).toEntity(requestAtualizado);
         verify(repository, times(1)).save(propriedadeAtualizada);
     }
 
@@ -95,7 +101,7 @@ public class PropriedadeServiceTest {
 
         List<Propriedade> resultado = service.listar();
         assertNotNull(resultado, "A lista de propriedades não deve ser nula");
-        assertEquals(2, resultado.size(), "A lista deve conter 2 propriedades");
+        assertEquals(2, resultado.size(), "Deve retornar 2 propriedades");
         verify(repository, times(1)).findAll();
     }
 
