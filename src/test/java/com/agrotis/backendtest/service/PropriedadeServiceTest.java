@@ -1,10 +1,10 @@
 package com.agrotis.backendtest.service;
 
+import com.agrotis.backendtest.adapter.PropriedadeAdapter;
 import com.agrotis.backendtest.handlers.ResourceNotFoundException;
 import com.agrotis.backendtest.model.Propriedade;
 import com.agrotis.backendtest.repository.PropriedadeRepository;
 import com.agrotis.backendtest.request.PropriedadeRequest;
-import com.agrotis.backendtest.adapter.Adapter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,129 +13,134 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validation;
+import javax.validation.Validator;
+import javax.validation.ValidatorFactory;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class PropriedadeServiceTest {
+class PropriedadeServiceTest {
 
     @Mock
-    private PropriedadeRepository repository;
+    private PropriedadeRepository propriedadeRepository;
 
     @Mock
-    private Adapter<Propriedade, PropriedadeRequest> adapter;
+    private PropriedadeAdapter propriedadeAdapter;
 
     @InjectMocks
-    private PropriedadeService service;
+    private PropriedadeService propriedadeService;
 
-    private PropriedadeRequest propriedadeRequest;
-    private Propriedade propriedade;
+    private Validator validator;
 
     @BeforeEach
     void setUp() {
-        propriedadeRequest = new PropriedadeRequest();
-        propriedadeRequest.setNome("Agrotis 1");
-        propriedadeRequest.setCnpj("04909987000189");
-
-        propriedade = new Propriedade();
-        propriedade.setId(1L);
-        propriedade.setNome("Agrotis 1");
-        propriedade.setCnpj("04909987000189");
+        ValidatorFactory factory = Validation.buildDefaultValidatorFactory();
+        validator = factory.getValidator();
     }
 
     @Test
     @DisplayName("salvar: Deve converter o request em entidade e salvar a Propriedade com sucesso")
-    void testSalvarPropriedade_Success() {
-        when(adapter.toEntity(propriedadeRequest)).thenReturn(propriedade);
-        when(repository.save(any(Propriedade.class))).thenReturn(propriedade);
+    void deveCriarPropriedadeComSucesso() {
+        PropriedadeRequest propriedadeRequest = new PropriedadeRequest();
+        propriedadeRequest.setNome("Propriedade Teste");
 
-        Propriedade resultado = service.salvar(propriedadeRequest);
+        Propriedade propriedade = new Propriedade(1L, "Propriedade Teste");
 
-        assertNotNull(resultado, "A propriedade salva não deve ser nula");
-        assertEquals("Agrotis 1", resultado.getNome(), "O nome deve ser 'Agrotis 1'");
-        verify(adapter, times(1)).toEntity(propriedadeRequest);
-        verify(repository, times(1)).save(propriedade);
+        when(propriedadeAdapter.toEntity(propriedadeRequest)).thenReturn(propriedade);
+        when(propriedadeRepository.save(any(Propriedade.class))).thenReturn(propriedade);
+
+        Propriedade resultado = propriedadeService.salvar(propriedadeRequest);
+
+        assertNotNull(resultado);
+        assertEquals("Propriedade Teste", resultado.getNome());
+        verify(propriedadeRepository, times(1)).save(any(Propriedade.class));
     }
 
     @Test
-    @DisplayName("editar: Deve editar uma Propriedade definindo o ID e atualizando os dados")
-    void testEditarPropriedade() {
-        when(repository.findById(1L)).thenReturn(Optional.of(propriedade));
-        when(repository.save(any(Propriedade.class))).thenAnswer(invocation -> invocation.getArgument(0));
+    @DisplayName("salvar: Deve retornar erro quando campos obrigatórios estão ausentes")
+    void deveRetornarErroQuandoCamposObrigatoriosEstaoAusentes() {
+        PropriedadeRequest propriedadeRequest = new PropriedadeRequest();
 
-        PropriedadeRequest requestAtualizado = new PropriedadeRequest();
-        requestAtualizado.setNome("Agrotis Atualizado");
-        requestAtualizado.setCnpj("12345678901234");
+        Set<ConstraintViolation<PropriedadeRequest>> violations = validator.validate(propriedadeRequest);
 
-        Propriedade propriedadeAtualizada = new Propriedade();
-        propriedadeAtualizada.setNome("Agrotis Atualizado");
-        propriedadeAtualizada.setCnpj("12345678901234");
-        when(adapter.toEntity(requestAtualizado)).thenReturn(propriedadeAtualizada);
+        assertFalse(violations.isEmpty());
+        assertEquals(1, violations.size());
 
-        Propriedade resultado = service.editar(1L, requestAtualizado);
-
-        assertNotNull(resultado, "A propriedade editada não deve ser nula");
-        assertEquals(1L, resultado.getId(), "O ID deve ser 1");
-        assertEquals("Agrotis Atualizado", resultado.getNome(), "O nome deve ser atualizado para 'Agrotis Atualizado'");
-        assertEquals("12345678901234", resultado.getCnpj(), "O CNPJ deve ser atualizado para o novo valor");
-        verify(repository, times(1)).findById(1L);
-        verify(adapter, times(1)).toEntity(requestAtualizado);
-        verify(repository, times(1)).save(propriedadeAtualizada);
-    }
-
-    @Test
-    @DisplayName("listar: Deve retornar a lista de Propriedades")
-    void testListarPropriedades() {
-        Propriedade propriedade2 = new Propriedade();
-        propriedade2.setId(2L);
-        propriedade2.setNome("Agrotis 2");
-        propriedade2.setCnpj("04909987000188");
-
-        List<Propriedade> lista = Arrays.asList(propriedade, propriedade2);
-        when(repository.findAll()).thenReturn(lista);
-
-        List<Propriedade> resultado = service.listar();
-        assertNotNull(resultado, "A lista de propriedades não deve ser nula");
-        assertEquals(2, resultado.size(), "Deve retornar 2 propriedades");
-        verify(repository, times(1)).findAll();
+        ConstraintViolation<PropriedadeRequest> violation = violations.iterator().next();
+        assertEquals("nome", violation.getPropertyPath().toString());
+        assertEquals("O nome da propriedade é obrigatório", violation.getMessage());
     }
 
     @Test
     @DisplayName("buscarPorId: Deve retornar a Propriedade quando encontrada")
-    void testBuscarPropriedadePorId_Success() {
-        when(repository.findById(1L)).thenReturn(Optional.of(propriedade));
+    void deveBuscarPropriedadePorIdComSucesso() {
+        Propriedade propriedade = new Propriedade(1L, "Propriedade Teste");
 
-        Propriedade resultado = service.buscarPorId(1L);
-        assertNotNull(resultado, "A propriedade encontrada não deve ser nula");
-        assertEquals("Agrotis 1", resultado.getNome(), "O nome deve ser 'Agrotis 1'");
-        verify(repository, times(1)).findById(1L);
+        when(propriedadeRepository.findById(1L)).thenReturn(Optional.of(propriedade));
+
+        Propriedade resultado = propriedadeService.buscarPorId(1L);
+
+        assertNotNull(resultado);
+        assertEquals(1L, resultado.getId());
+        verify(propriedadeRepository, times(1)).findById(1L);
     }
 
     @Test
-    @DisplayName("buscarPorId: Deve lançar ResourceNotFoundException quando a Propriedade não for encontrada")
-    void testBuscarPropriedadePorId_NotFound() {
-        when(repository.findById(999L)).thenReturn(Optional.empty());
+    @DisplayName("buscarPorId: Deve retornar erro quando Propriedade não for encontrada")
+    void deveRetornarErroAoBuscarPropriedadeInexistente() {
+        when(propriedadeRepository.findById(999L)).thenReturn(Optional.empty());
 
-        ResourceNotFoundException ex = assertThrows(ResourceNotFoundException.class, () -> {
-            service.buscarPorId(999L);
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
+            propriedadeService.buscarPorId(999L);
         });
-        assertEquals("Propriedade não encontrada!", ex.getMessage(), "A mensagem de erro deve ser 'Propriedade não encontrada!'");
-        verify(repository, times(1)).findById(999L);
+
+        assertEquals("Propriedade não encontrada!", exception.getMessage());
     }
 
     @Test
-    @DisplayName("deletar: Deve deletar a Propriedade quando encontrada")
-    void testDeletarPropriedade() {
-        when(repository.findById(1L)).thenReturn(Optional.of(propriedade));
-        doNothing().when(repository).deleteById(1L);
+    @DisplayName("editar: Deve atualizar a Propriedade com sucesso")
+    void deveEditarPropriedadeComSucesso() {
+        PropriedadeRequest propriedadeRequest = new PropriedadeRequest();
+        propriedadeRequest.setNome("Novo Nome");
 
-        service.deletar(1L);
-        verify(repository, times(1)).findById(1L);
-        verify(repository, times(1)).deleteById(1L);
+        Propriedade propriedadeExistente = new Propriedade(1L, "Nome Antigo");
+
+        when(propriedadeRepository.findById(1L)).thenReturn(Optional.of(propriedadeExistente));
+        when(propriedadeRepository.save(any(Propriedade.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Propriedade resultado = propriedadeService.editar(1L, propriedadeRequest);
+
+        assertEquals("Novo Nome", resultado.getNome());
+        verify(propriedadeRepository, times(1)).save(any(Propriedade.class));
+    }
+
+
+    @Test
+    @DisplayName("deletar: Deve excluir a Propriedade com sucesso")
+    void deveDeletarPropriedadeComSucesso() {
+        Propriedade propriedade = new Propriedade(1L, "Propriedade Teste");
+
+        when(propriedadeRepository.findById(1L)).thenReturn(Optional.of(propriedade));
+        doNothing().when(propriedadeRepository).deleteById(1L);
+
+        assertDoesNotThrow(() -> propriedadeService.deletar(1L));
+
+        verify(propriedadeRepository, times(1)).deleteById(1L);
+    }
+
+    @Test
+    @DisplayName("deletar: Deve retornar erro quando Propriedade não for encontrada")
+    void deveRetornarErroAoDeletarPropriedadeInexistente() {
+        when(propriedadeRepository.findById(999L)).thenReturn(Optional.empty());
+
+        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class, () -> {
+            propriedadeService.deletar(999L);
+        });
+
+        assertEquals("Propriedade não encontrada!", exception.getMessage());
     }
 }

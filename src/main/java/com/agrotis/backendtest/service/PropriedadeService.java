@@ -26,11 +26,15 @@ public class PropriedadeService {
     }
 
     public Propriedade editar(Long id, PropriedadeRequest propriedadeRequest) {
-        buscarPorId(id);
-        Propriedade propriedade = adapter.toEntity(propriedadeRequest);
-        propriedade.setId(id);
-        return repository.save(propriedade);
+        Propriedade propriedadeExistente = buscarPorId(id);
+
+        if (propriedadeRequest.getNome() != null) {
+            propriedadeExistente.setNome(propriedadeRequest.getNome());
+        }
+
+        return repository.save(propriedadeExistente);
     }
+
 
     public List<Propriedade> listar() {
         return repository.findAll();

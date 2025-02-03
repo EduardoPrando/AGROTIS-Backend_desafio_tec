@@ -1,14 +1,10 @@
 package com.agrotis.backendtest.request;
 
-import com.agrotis.backendtest.adapter.Adapter;
-import org.springframework.stereotype.Component;
+import javax.validation.constraints.NotBlank;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
 
 public class LaboratorioRequest {
+    @NotBlank(message = "O nome do laboratório é obrigatório")
     private String nome;
     public LaboratorioRequest() {}
 

@@ -32,27 +32,52 @@ public class PessoaService {
 
     public Pessoa salvar(PessoaRequest pessoaRequest) {
         Pessoa pessoa = adapter.toEntity(pessoaRequest);
-        if (pessoa.getPropriedade() != null && pessoa.getPropriedade().getId() != null) {
-            Propriedade propriedade = propriedadeRepository
-                    .findById(pessoa.getPropriedade().getId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Propriedade com ID " + pessoa.getPropriedade().getId() + " não encontrada"));
-            pessoa.setPropriedade(propriedade);
+
+        if (pessoa.getPropriedade() != null) {
+            Long propriedadeId = pessoa.getPropriedade().getId();
+            if (propriedadeId != null) {
+                Propriedade propriedade = propriedadeRepository
+                        .findById(propriedadeId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Propriedade com ID " + propriedadeId + " não encontrada"));
+                pessoa.setPropriedade(propriedade);
+            }
         }
-        if (pessoa.getLaboratorio() != null && pessoa.getLaboratorio().getId() != null) {
-            Laboratorio laboratorio = laboratorioRepository
-                    .findById(pessoa.getLaboratorio().getId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Laboratorio com ID " + pessoa.getLaboratorio().getId() + " não encontrado"));
-            pessoa.setLaboratorio(laboratorio);
+
+        if (pessoa.getLaboratorio() != null) {
+            Long laboratorioId = pessoa.getLaboratorio().getId();
+            if (laboratorioId != null) {
+                Laboratorio laboratorio = laboratorioRepository
+                        .findById(laboratorioId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Laboratorio com ID " + laboratorioId + " não encontrado"));
+                pessoa.setLaboratorio(laboratorio);
+            }
         }
+
         return repository.save(pessoa);
     }
 
+
     public Pessoa editar(Long id, PessoaRequest pessoaRequest) {
-        buscarPorId(id);
-        Pessoa pessoa = adapter.toEntity(pessoaRequest);
-        pessoa.setId(id);
-        return repository.save(pessoa);
+        Pessoa pessoaExistente = buscarPorId(id);
+
+        pessoaExistente.setNome(pessoaRequest.getNome());
+        pessoaExistente.setDataInicial(pessoaRequest.getDataInicial());
+        pessoaExistente.setDataFinal(pessoaRequest.getDataFinal());
+        pessoaExistente.setObservacoes(pessoaRequest.getObservacoes());
+
+        if (pessoaRequest.getPropriedade() != null) {
+            pessoaExistente.setPropriedade(propriedadeRepository.findById(pessoaRequest.getPropriedade().getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Propriedade não encontrada!")));
+        }
+
+        if (pessoaRequest.getLaboratorio() != null) {
+            pessoaExistente.setLaboratorio(laboratorioRepository.findById(pessoaRequest.getLaboratorio().getId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Laboratório não encontrado!")));
+        }
+
+        return repository.save(pessoaExistente);
     }
+
 
     public List<Pessoa> listar() {
         return repository.findAll();

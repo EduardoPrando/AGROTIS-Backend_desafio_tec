@@ -19,6 +19,11 @@ public class Propriedade {
         this.cnpj = cnpj;
     }
 
+    public Propriedade(Long id, String nome) {
+        this.id = id;
+        this.nome = nome;
+    }
+
     public Long getId() {
         return id;
     }

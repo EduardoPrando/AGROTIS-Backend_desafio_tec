@@ -7,6 +7,7 @@ import javax.persistence.Id;
 import javax.validation.constraints.NotBlank;
 
 public class PropriedadeRequest {
+    @NotBlank(message = "O nome da propriedade é obrigatório")
     private String nome;
     private String cnpj;
 

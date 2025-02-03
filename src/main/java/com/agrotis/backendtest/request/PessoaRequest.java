@@ -3,7 +3,6 @@ package com.agrotis.backendtest.request;
 import com.agrotis.backendtest.model.Laboratorio;
 import com.agrotis.backendtest.model.Propriedade;
 
-import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;

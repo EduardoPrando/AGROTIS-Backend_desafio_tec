@@ -26,11 +26,15 @@ public class LaboratorioService {
     }
 
     public Laboratorio editar(Long id, LaboratorioRequest laboratorioRequest) {
-        buscarPorId(id);
-        Laboratorio laboratorio = adapter.toEntity(laboratorioRequest);
-        laboratorio.setId(id);
-        return repository.save(laboratorio);
+        Laboratorio laboratorioExistente = buscarPorId(id);
+
+        if (laboratorioRequest.getNome() != null) {
+            laboratorioExistente.setNome(laboratorioRequest.getNome());
+        }
+
+        return repository.save(laboratorioExistente);
     }
+
 
     public List<Laboratorio> listar() {
         return repository.findAll();
